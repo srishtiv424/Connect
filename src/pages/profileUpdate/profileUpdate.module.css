@@ -1,0 +1,95 @@
+.profile{
+  min-height:100vh;
+  background: url(../../assets/background.png) no-repeat;
+  background-size: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.profileContainer{
+  background-color: white;
+  display:flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width:700px;
+  border-radius: 10px;
+}
+.logo{
+  max-width: 160px;
+  aspect-ratio: 1/1;
+  margin: 20px auto;
+  border-radius: 50%;
+}
+.profile form{
+  display: flex;
+  flex-direction: column;
+  gap:20px;
+  padding: 40px;
+
+}
+.profile form h3{
+  font-weight: 500;
+}
+.profile label{
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 10px;
+color:gray;
+cursor:pointer
+}
+.profile label img{
+  width:50px;
+  aspect-ratio: 1/1;
+  border-radius: 50%;
+}
+.profile input ,textarea{
+  padding: 10px;
+  min-width: 300px;
+  border: 1px solid #c9c9c9;
+  outline-color: #077eff;
+}
+.profile from button{
+  border:none;
+  color: white;
+  background-color: #077eff;
+  padding: 8px;
+  font-size: 16px;
+  cursor: pointer;
+}
+@media (max-width:900px){
+  .profile{
+    background: #077eff;
+    background: linear-gradient(#596AFF,#383699);
+    min-height: 100vh;
+    min-width: 100vw;
+    margin: 0;
+    padding: 0;
+  }
+  .logo{
+    display: none;
+  }
+  .profileContainer{
+    display: flex;
+    flex-direction: column;
+    min-width: 90%;
+    padding: 10%;
+    margin: 10%;
+  }
+  .profile .profileContainer form{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  .profile .profileContainer button{
+    width: 90%;
+    background-color: #077eff;
+    background: linear-gradient(#596AFF,#383699);
+  padding: 1%;
+  color: white;
+  border: none;
+  cursor: pointer;
+
+  }
+}
