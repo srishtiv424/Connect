@@ -6,7 +6,6 @@ import pic2 from "../../assets/pic2.png";
 import { GoDotFill } from "react-icons/go";
 import { IoHelpCircleOutline } from "react-icons/io5";
 import { IoMdArrowBack } from "react-icons/io";
-
 import { IoMdSend } from "react-icons/io";
 import { AppContext } from "../../context/AppContext";
 import logo from "../../assets/logo_icon.png";
@@ -16,7 +15,7 @@ import {
   onSnapshot,
   updateDoc,
   getDoc,
-} from "firebase/firestore"; // Ensure all imports
+} from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { toast } from "react-toastify";
 import upload from "../../lib/upload";
@@ -50,11 +49,38 @@ function Chatbox() {
     let hours = date.getHours();
     let minutes = date.getMinutes();
     let ampm =
-      hours >= 12
-        ? hours - 12 + ":" + minutes + "PM"
-        : hours + ":" + minutes + "AM";
+      hours >= 12 ? `${hours - 12}:${minutes}PM` : `${hours}:${minutes}AM`;
     return ampm;
   }
+
+  const updateChatData = async (lastMessage, isImage = false) => {
+    const userIds = [chatUser.rId, userData.id];
+    for (const id of userIds) {
+      const userChatsRef = doc(db, "chats", id);
+      const userChatsSnapshot = await getDoc(userChatsRef);
+
+      if (userChatsSnapshot.exists()) {
+        const userChatData = userChatsSnapshot.data();
+        const chatIndex = userChatData.chatsData.findIndex(
+          (c) => c.messageId === messagesId
+        );
+
+        userChatData.chatsData[chatIndex].lastMessage = isImage
+          ? "Image"
+          : lastMessage.slice(0, 30);
+        userChatData.chatsData[chatIndex].updatedAt = Date.now();
+
+        if (userChatData.chatsData[chatIndex].rId === userData.id) {
+          userChatData.chatsData[chatIndex].messageSeen = false;
+        }
+
+        await updateDoc(userChatsRef, {
+          chatsData: userChatData.chatsData,
+        });
+      }
+    }
+  };
+
   const sendImg = async (e) => {
     try {
       const fileUrl = await upload(e.target.files[0]);
@@ -70,34 +96,13 @@ function Chatbox() {
             createdAt: new Date(),
           }),
         });
-        const userIds = [chatUser.rId, userData.id];
-        userIds.forEach(async (id) => {
-          const userChatsRef = doc(db, "chats", id);
-          const userChatsSnapshot = await getDoc(userChatsRef);
-
-          if (userChatsSnapshot.exists()) {
-            const userChatData = userChatsSnapshot.data();
-            const chatIndex = userChatData.chatsData.findIndex(
-              (c) => c.messageId === messagesId
-            );
-
-            userChatData.chatsData[chatIndex].lastMessage = "Image";
-            userChatData.chatsData[chatIndex].updatedAt = Date.now();
-
-            if (userChatData.chatsData[chatIndex].rId === userData.id) {
-              userChatData.chatsData[chatIndex].messageSeen = false;
-            }
-
-            await updateDoc(userChatsRef, {
-              chatsData: userChatData.chatsData,
-            });
-          }
-        });
+        await updateChatData("Image", true);
       }
     } catch (error) {
       toast.error(error.code);
     }
   };
+
   const sendMessage = async () => {
     try {
       if (input && messagesId) {
@@ -109,29 +114,7 @@ function Chatbox() {
           }),
         });
 
-        const userIds = [chatUser.rId, userData.id];
-        userIds.forEach(async (id) => {
-          const userChatsRef = doc(db, "chats", id);
-          const userChatsSnapshot = await getDoc(userChatsRef);
-
-          if (userChatsSnapshot.exists()) {
-            const userChatData = userChatsSnapshot.data();
-            const chatIndex = userChatData.chatsData.findIndex(
-              (c) => c.messageId === messagesId
-            );
-
-            userChatData.chatsData[chatIndex].lastMessage = input.slice(0, 30);
-            userChatData.chatsData[chatIndex].updatedAt = Date.now();
-
-            if (userChatData.chatsData[chatIndex].rId === userData.id) {
-              userChatData.chatsData[chatIndex].messageSeen = false;
-            }
-
-            await updateDoc(userChatsRef, {
-              chatsData: userChatData.chatsData,
-            });
-          }
-        });
+        await updateChatData(input);
       }
     } catch (error) {
       toast.error(error.code);
@@ -139,6 +122,7 @@ function Chatbox() {
 
     setInput("");
   };
+
   return (
     <div className={`${style.chatBox} ${chatVisible ? "" : style.hidden}`}>
       {chatUser ? (
@@ -152,8 +136,10 @@ function Chatbox() {
               ) : null}
             </p>
             <IoHelpCircleOutline className={style.help} />
-            <IoMdArrowBack onClick={()=>setChatVisible(false)} className={style.back}/>
-
+            <IoMdArrowBack
+              onClick={() => setChatVisible(false)}
+              className={style.back}
+            />
           </div>
           <div className={style.chatMsg}>
             {messages.map((msg, idx) => (
@@ -161,8 +147,12 @@ function Chatbox() {
                 key={idx}
                 className={msg.sId === userData.id ? style.sMsg : style.rMsg}
               >
-                {msg["image"] ? (
-                  <img src={msg.image} className={style.msgImg} />
+                {msg.image ? (
+                  <img
+                    src={msg.image}
+                    className={style.msgImg}
+                    alt="Message Attachment"
+                  />
                 ) : (
                   <p className={style.msg}>{msg.text}</p>
                 )}
@@ -174,6 +164,7 @@ function Chatbox() {
                         ? userData.avatar
                         : chatUser.userData.avatar
                     }
+                    alt="User Avatar"
                   />
                   <p>{convertTimeStamp(msg.createdAt)}</p>
                 </div>
@@ -190,7 +181,7 @@ function Chatbox() {
             />
             <div>
               <input
-                onChange={(e) => sendImg(e)}
+                onChange={sendImg}
                 type="file"
                 id="image"
                 accept="image/png,image/jpeg,image/jpg"
