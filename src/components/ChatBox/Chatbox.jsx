@@ -1,6 +1,8 @@
 import React, { useContext, useEffect, useState } from "react";
 import style from "./Chatbox.module.css";
+import profile from "../../assets/profile_marco.png";
 import { MdInsertPhoto } from "react-icons/md";
+import pic2 from "../../assets/pic2.png";
 import { GoDotFill } from "react-icons/go";
 import { IoHelpCircleOutline } from "react-icons/io5";
 import { IoMdArrowBack } from "react-icons/io";
@@ -13,6 +15,7 @@ import {
   onSnapshot,
   updateDoc,
   getDoc,
+  serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import { toast } from "react-toastify";
@@ -34,7 +37,7 @@ function Chatbox() {
   useEffect(() => {
     if (messagesId) {
       const unSub = onSnapshot(doc(db, "messages", messagesId), (res) => {
-        setMessages(res.data().messages.reverse());
+        setMessages(res.data().messages);
       });
       return () => {
         unSub();
@@ -45,9 +48,9 @@ function Chatbox() {
   function convertTimeStamp(timestamp) {
     let date = timestamp.toDate();
     let hours = date.getHours();
-    let minutes = date.getMinutes();
+    let minutes = date.getMinutes().toString().padStart(2, "0"); // Ensures two digits for minutes
     let ampm =
-      hours >= 12 ? `${hours - 12}:${minutes}PM` : `${hours}:${minutes}AM`;
+      hours >= 12 ? `${hours - 12 || 12}:${minutes}PM` : `${hours}:${minutes}AM`;
     return ampm;
   }
 
@@ -66,7 +69,7 @@ function Chatbox() {
         userChatData.chatsData[chatIndex].lastMessage = isImage
           ? "Image"
           : lastMessage.slice(0, 30);
-        userChatData.chatsData[chatIndex].updatedAt = Date.now();
+        userChatData.chatsData[chatIndex].updatedAt = serverTimestamp();
 
         if (userChatData.chatsData[chatIndex].rId === userData.id) {
           userChatData.chatsData[chatIndex].messageSeen = false;
@@ -80,6 +83,7 @@ function Chatbox() {
   };
 
   const sendImg = async (e) => {
+    if (!e.target.files.length) return; // Check if a file is selected
     try {
       const fileUrl = await upload(e.target.files[0]);
       if (!fileUrl) {
