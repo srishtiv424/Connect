@@ -1,8 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import style from "./Chatbox.module.css";
-import profile from "../../assets/profile_marco.png";
 import { MdInsertPhoto } from "react-icons/md";
-import pic2 from "../../assets/pic2.png";
 import { GoDotFill } from "react-icons/go";
 import { IoHelpCircleOutline } from "react-icons/io5";
 import { IoMdArrowBack } from "react-icons/io";
